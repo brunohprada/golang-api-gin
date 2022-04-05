@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -8,13 +9,27 @@ import (
 
 	"github.com/brunohprada/go-api-gin/controllers"
 	"github.com/brunohprada/go-api-gin/database"
+	"github.com/brunohprada/go-api-gin/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
+var ID int
+
 func SetupDasRotasDeTeste() *gin.Engine {
 	rotas := gin.Default()
 	return rotas
+}
+
+func CriaAlunoMock() {
+	aluno := models.Aluno{Nome: "Nome do Aluno Teste", CPF: "36544876287", RG: "758934723"}
+	database.DB.Create(&aluno)
+	ID = int(aluno.ID)
+}
+
+func DeletaAlunoMock() {
+	var aluno models.Aluno
+	database.DB.Delete(&aluno, ID)
 }
 
 func TestVerificaStatusCodeDaSaudacaoComParametro(t *testing.T) {
@@ -31,10 +46,13 @@ func TestVerificaStatusCodeDaSaudacaoComParametro(t *testing.T) {
 
 func TestListandoTodosOsAlunosHandler(t *testing.T) {
 	database.ConectaComBancoDeDados()
+	CriaAlunoMock()
+	defer DeletaAlunoMock()
 	r := SetupDasRotasDeTeste()
 	r.GET("/alunos", controllers.ExibeTodosAlunos)
 	req, _ := http.NewRequest("GET", "/alunos", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)
 	assert.Equal(t, http.StatusOK, resposta.Code)
+	fmt.Println(resposta.Body)
 }
