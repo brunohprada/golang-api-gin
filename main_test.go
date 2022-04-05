@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/brunohprada/go-api-gin/controllers"
+	"github.com/brunohprada/go-api-gin/database"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,6 +27,14 @@ func TestVerificaStatusCodeDaSaudacaoComParametro(t *testing.T) {
 	mockDaResposta := `{"API diz:":"E ai bruno, tudo beleza?"}`
 	respostaBody, _ := ioutil.ReadAll(resposta.Body)
 	assert.Equal(t, mockDaResposta, string(respostaBody))
-	fmt.Println(string(respostaBody))
-	fmt.Println(string(mockDaResposta))
+}
+
+func TestListandoTodosOsAlunosHandler(t *testing.T) {
+	database.ConectaComBancoDeDados()
+	r := SetupDasRotasDeTeste()
+	r.GET("/alunos", controllers.ExibeTodosAlunos)
+	req, _ := http.NewRequest("GET", "/alunos", nil)
+	resposta := httptest.NewRecorder()
+	r.ServeHTTP(resposta, req)
+	assert.Equal(t, http.StatusOK, resposta.Code)
 }
